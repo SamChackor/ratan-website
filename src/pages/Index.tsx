@@ -4,15 +4,18 @@ import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { Building2, Users, Clock, Trophy, BookOpen, PlayCircle } from "lucide-react";
 import { Link } from "react-router-dom";
+import { useAuth } from "@/contexts/AuthContext";
 
 const Index = () => {
+  const { user, logout } = useAuth();
+  
   // Sample simulation state
   const simulationState = {
     currentRound: 1,
     roundsCompleted: 0,
     totalRounds: 3,
-    teamName: "Team Red Fox",
-    members: ["Riya", "Aditya"]
+    teamName: user?.teamName || "Team Red Fox",
+    members: user?.teamName === "Team Red Fox" ? ["Riya", "Aditya"] : ["Karan", "Meera"]
   };
 
   const rounds = [
@@ -26,6 +29,12 @@ const Index = () => {
       {/* Hero Section */}
       <header className="bg-gradient-to-r from-primary/10 via-primary/5 to-background border-b">
         <div className="container mx-auto px-4 py-12">
+          <div className="flex justify-between items-start mb-6">
+            <div></div>
+            <Button variant="outline" onClick={logout} size="sm">
+              Logout
+            </Button>
+          </div>
           <div className="text-center space-y-6">
             <div className="flex justify-center">
               <Building2 className="h-16 w-16 text-primary" />
@@ -60,7 +69,7 @@ const Index = () => {
                 <CardTitle className="text-2xl">{simulationState.teamName}</CardTitle>
                 <CardDescription className="flex items-center gap-2 mt-2">
                   <Users className="h-4 w-4" />
-                  {simulationState.members.join(", ")}
+                  Welcome, {user?.name}
                 </CardDescription>
               </div>
               <Trophy className="h-12 w-12 text-primary/60" />
