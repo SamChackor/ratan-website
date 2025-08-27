@@ -52,6 +52,33 @@ export default {
 					DEFAULT: 'hsl(var(--card))',
 					foreground: 'hsl(var(--card-foreground))'
 				},
+				practice: {
+					DEFAULT: 'hsl(var(--practice))',
+					foreground: 'hsl(var(--practice-foreground))'
+				},
+				'round-1': {
+					DEFAULT: 'hsl(var(--round-1))',
+					foreground: 'hsl(var(--round-1-foreground))'
+				},
+				'round-2': {
+					DEFAULT: 'hsl(var(--round-2))',
+					foreground: 'hsl(var(--round-2-foreground))'
+				},
+				success: {
+					DEFAULT: 'hsl(var(--success))',
+					foreground: 'hsl(var(--success-foreground))'
+				},
+				warning: {
+					DEFAULT: 'hsl(var(--warning))',
+					foreground: 'hsl(var(--warning-foreground))'
+				},
+				chart: {
+					'1': 'hsl(var(--chart-1))',
+					'2': 'hsl(var(--chart-2))',
+					'3': 'hsl(var(--chart-3))',
+					'4': 'hsl(var(--chart-4))',
+					'5': 'hsl(var(--chart-5))'
+				},
 				sidebar: {
 					DEFAULT: 'hsl(var(--sidebar-background))',
 					foreground: 'hsl(var(--sidebar-foreground))',
