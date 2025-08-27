@@ -2,11 +2,12 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Trophy, Medal, Award, TrendingUp, TrendingDown, Minus, Users, BarChart3 } from "lucide-react";
+import { Trophy, Medal, Award, TrendingUp, TrendingDown, Minus, Users, BarChart3, Home, ArrowLeft } from "lucide-react";
 import { useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 
 const Rank = () => {
+  const navigate = useNavigate();
   const [sortBy, setSortBy] = useState<'composite' | 'profit'>('composite');
 
   // Sample leaderboard data
@@ -89,6 +90,16 @@ const Rank = () => {
               </div>
             </div>
             <div className="flex gap-2">
+              <Button variant="outline" onClick={() => navigate(-1)}>
+                <ArrowLeft className="h-4 w-4 mr-2" />
+                Back
+              </Button>
+              <Link to="/">
+                <Button variant="outline">
+                  <Home className="h-4 w-4 mr-2" />
+                  Home
+                </Button>
+              </Link>
               <Link to="/results/2">
                 <Button variant="outline">
                   <BarChart3 className="h-4 w-4 mr-2" />

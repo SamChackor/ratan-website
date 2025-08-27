@@ -2,11 +2,12 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Badge } from "@/components/ui/badge";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { Button } from "@/components/ui/button";
-import { ChevronDown, BookOpen, TrendingUp, Users, Target, Calculator } from "lucide-react";
+import { ChevronDown, BookOpen, TrendingUp, Users, Target, Calculator, Home, ArrowLeft } from "lucide-react";
 import { useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 
 const Theory = () => {
+  const navigate = useNavigate();
   const [faqOpen, setFaqOpen] = useState<Record<string, boolean>>({});
 
   const toggleFaq = (key: string) => {
@@ -26,9 +27,21 @@ const Theory = () => {
                 <p className="text-muted-foreground">Operations Management & Game Theory</p>
               </div>
             </div>
-            <Link to="/decision">
-              <Button>Start Simulation</Button>
-            </Link>
+            <div className="flex gap-2">
+              <Button variant="outline" onClick={() => navigate(-1)}>
+                <ArrowLeft className="h-4 w-4 mr-2" />
+                Back
+              </Button>
+              <Link to="/">
+                <Button variant="outline">
+                  <Home className="h-4 w-4 mr-2" />
+                  Home
+                </Button>
+              </Link>
+              <Link to="/decision">
+                <Button>Start Simulation</Button>
+              </Link>
+            </div>
           </div>
         </div>
       </header>

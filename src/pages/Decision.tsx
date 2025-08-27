@@ -4,7 +4,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
-import { AlertCircle, Clock, Users, Settings, TrendingUp, DollarSign } from "lucide-react";
+import { AlertCircle, Clock, Users, Settings, TrendingUp, DollarSign, Home, ArrowLeft } from "lucide-react";
 import { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { Alert, AlertDescription } from "@/components/ui/alert";
@@ -126,6 +126,16 @@ const Decision = () => {
               </div>
             </div>
             <div className="flex gap-2">
+              <Button variant="outline" onClick={() => navigate(-1)}>
+                <ArrowLeft className="h-4 w-4 mr-2" />
+                Back
+              </Button>
+              <Link to="/">
+                <Button variant="outline">
+                  <Home className="h-4 w-4 mr-2" />
+                  Home
+                </Button>
+              </Link>
               <Link to="/theory">
                 <Button variant="outline">View Theory</Button>
               </Link>

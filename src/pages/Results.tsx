@@ -2,8 +2,8 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
-import { TrendingUp, TrendingDown, BarChart3, PieChart, Download, Users } from "lucide-react";
-import { useParams, Link } from "react-router-dom";
+import { TrendingUp, TrendingDown, BarChart3, PieChart, Download, Users, Home, ArrowLeft } from "lucide-react";
+import { useParams, Link, useNavigate } from "react-router-dom";
 import { 
   BarChart, Bar, LineChart, Line, PieChart as RechartsPieChart, Cell, Pie,
   RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis, Radar,
@@ -12,6 +12,7 @@ import {
 
 const Results = () => {
   const { roundId } = useParams();
+  const navigate = useNavigate();
   const currentRoundId = parseInt(roundId || '1');
 
   const rounds = [
@@ -101,6 +102,16 @@ const Results = () => {
               </div>
             </div>
             <div className="flex gap-2">
+              <Button variant="outline" onClick={() => navigate(-1)}>
+                <ArrowLeft className="h-4 w-4 mr-2" />
+                Back
+              </Button>
+              <Link to="/">
+                <Button variant="outline">
+                  <Home className="h-4 w-4 mr-2" />
+                  Home
+                </Button>
+              </Link>
               <Link to="/rank">
                 <Button variant="outline">View Leaderboard</Button>
               </Link>
