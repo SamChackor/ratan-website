@@ -14,16 +14,238 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      profiles: {
+        Row: {
+          created_at: string | null
+          email: string
+          id: string
+          name: string
+        }
+        Insert: {
+          created_at?: string | null
+          email: string
+          id: string
+          name: string
+        }
+        Update: {
+          created_at?: string | null
+          email?: string
+          id?: string
+          name?: string
+        }
+        Relationships: []
+      }
+      round_decisions: {
+        Row: {
+          id: string
+          payload: Json
+          round_id: number
+          simulation_id: string
+          status: string | null
+          submitted_at: string | null
+          team_id: string
+          user_id: string
+        }
+        Insert: {
+          id?: string
+          payload: Json
+          round_id: number
+          simulation_id: string
+          status?: string | null
+          submitted_at?: string | null
+          team_id: string
+          user_id: string
+        }
+        Update: {
+          id?: string
+          payload?: Json
+          round_id?: number
+          simulation_id?: string
+          status?: string | null
+          submitted_at?: string | null
+          team_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "round_decisions_simulation_id_fkey"
+            columns: ["simulation_id"]
+            isOneToOne: false
+            referencedRelation: "simulations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "round_decisions_team_id_fkey"
+            columns: ["team_id"]
+            isOneToOne: false
+            referencedRelation: "teams"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      round_results: {
+        Row: {
+          breakdown: Json
+          created_at: string | null
+          id: string
+          metrics: Json
+          round_id: number
+          simulation_id: string
+          team_id: string
+        }
+        Insert: {
+          breakdown: Json
+          created_at?: string | null
+          id?: string
+          metrics: Json
+          round_id: number
+          simulation_id: string
+          team_id: string
+        }
+        Update: {
+          breakdown?: Json
+          created_at?: string | null
+          id?: string
+          metrics?: Json
+          round_id?: number
+          simulation_id?: string
+          team_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "round_results_simulation_id_fkey"
+            columns: ["simulation_id"]
+            isOneToOne: false
+            referencedRelation: "simulations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "round_results_team_id_fkey"
+            columns: ["team_id"]
+            isOneToOne: false
+            referencedRelation: "teams"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      simulations: {
+        Row: {
+          config: Json
+          created_at: string | null
+          current_round_id: number | null
+          id: string
+          status: string | null
+          title: string
+        }
+        Insert: {
+          config: Json
+          created_at?: string | null
+          current_round_id?: number | null
+          id?: string
+          status?: string | null
+          title: string
+        }
+        Update: {
+          config?: Json
+          created_at?: string | null
+          current_round_id?: number | null
+          id?: string
+          status?: string | null
+          title?: string
+        }
+        Relationships: []
+      }
+      team_members: {
+        Row: {
+          id: string
+          team_id: string
+          user_id: string
+        }
+        Insert: {
+          id?: string
+          team_id: string
+          user_id: string
+        }
+        Update: {
+          id?: string
+          team_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "team_members_team_id_fkey"
+            columns: ["team_id"]
+            isOneToOne: false
+            referencedRelation: "teams"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      teams: {
+        Row: {
+          created_at: string | null
+          id: string
+          simulation_id: string
+          state: Json | null
+          team_name: string
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          simulation_id: string
+          state?: Json | null
+          team_name: string
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          simulation_id?: string
+          state?: Json | null
+          team_name?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "teams_simulation_id_fkey"
+            columns: ["simulation_id"]
+            isOneToOne: false
+            referencedRelation: "simulations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      user_roles: {
+        Row: {
+          id: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Insert: {
+          id?: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Update: {
+          id?: string
+          role?: Database["public"]["Enums"]["app_role"]
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      has_role: {
+        Args: {
+          _role: Database["public"]["Enums"]["app_role"]
+          _user_id: string
+        }
+        Returns: boolean
+      }
     }
     Enums: {
-      [_ in never]: never
+      app_role: "organizer" | "participant"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -150,6 +372,8 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      app_role: ["organizer", "participant"],
+    },
   },
 } as const

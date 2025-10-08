@@ -8,17 +8,69 @@ import {
   Shield, Users, Activity, Settings, Download, Search, 
   Eye, MoreHorizontal, LogOut, RefreshCw, Clock, TrendingUp 
 } from "lucide-react";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useAuth } from "@/contexts/AuthContext";
-import { ParticipantData } from "@/types/auth";
+import { supabase } from "@/integrations/supabase/client";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 
-const Organizer = () => {
-  const { user, logout, getAllParticipants } = useAuth();
-  const [searchTerm, setSearchTerm] = useState('');
-  const [selectedParticipant, setSelectedParticipant] = useState<ParticipantData | null>(null);
+interface TeamMember {
+  id: string;
+  name: string;
+  email: string;
+  teamId: string;
+  teamName: string;
+  status: 'active' | 'inactive' | 'completed';
+}
 
-  const participants = getAllParticipants();
+const Organizer = () => {
+  const { user, logout } = useAuth();
+  const [searchTerm, setSearchTerm] = useState('');
+  const [participants, setParticipants] = useState<TeamMember[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [selectedParticipant, setSelectedParticipant] = useState<TeamMember | null>(null);
+
+  useEffect(() => {
+    fetchParticipants();
+  }, []);
+
+  const fetchParticipants = async () => {
+    try {
+      setLoading(true);
+      const { data: teamMembers, error } = await supabase
+        .from('team_members')
+        .select(`
+          id,
+          team_id,
+          user_id,
+          teams!inner(
+            team_name,
+            simulation_id
+          ),
+          profiles!inner(
+            name,
+            email
+          )
+        `);
+
+      if (error) throw error;
+
+      const formatted: TeamMember[] = (teamMembers || []).map((tm: any) => ({
+        id: tm.user_id,
+        name: tm.profiles.name,
+        email: tm.profiles.email,
+        teamId: tm.team_id,
+        teamName: tm.teams.team_name,
+        status: 'active' as const
+      }));
+
+      setParticipants(formatted);
+    } catch (error) {
+      console.error('Error fetching participants:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const filteredParticipants = participants.filter(p => 
     p.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
     p.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -28,8 +80,8 @@ const Organizer = () => {
   const stats = {
     totalParticipants: participants.length,
     activeParticipants: participants.filter(p => p.status === 'active').length,
-    completedRounds: participants.reduce((sum, p) => sum + p.progress.roundsCompleted, 0),
-    avgProgress: participants.reduce((sum, p) => sum + p.progress.roundsCompleted, 0) / participants.length
+    completedRounds: 0,
+    avgProgress: 0
   };
 
   const getStatusColor = (status: string) => {
@@ -41,15 +93,6 @@ const Organizer = () => {
     }
   };
 
-  const formatLastActivity = (dateString: string) => {
-    const date = new Date(dateString);
-    const now = new Date();
-    const diffInHours = Math.floor((now.getTime() - date.getTime()) / (1000 * 60 * 60));
-    
-    if (diffInHours < 1) return 'Just now';
-    if (diffInHours < 24) return `${diffInHours}h ago`;
-    return `${Math.floor(diffInHours / 24)}d ago`;
-  };
 
   return (
     <div className="min-h-screen bg-background">
@@ -65,8 +108,8 @@ const Organizer = () => {
               </div>
             </div>
             <div className="flex items-center gap-2">
-              <Button variant="outline" size="sm">
-                <RefreshCw className="h-4 w-4 mr-2" />
+              <Button variant="outline" size="sm" onClick={fetchParticipants} disabled={loading}>
+                <RefreshCw className={`h-4 w-4 mr-2 ${loading ? 'animate-spin' : ''}`} />
                 Refresh
               </Button>
               <Button variant="outline" size="sm">
@@ -181,34 +224,44 @@ const Organizer = () => {
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {filteredParticipants.map((participant) => (
-                      <TableRow key={participant.id}>
-                        <TableCell>
-                          <div>
-                            <div className="font-medium">{participant.name}</div>
-                            <div className="text-sm text-muted-foreground">{participant.email}</div>
-                          </div>
+                    {loading ? (
+                      <TableRow>
+                        <TableCell colSpan={6} className="text-center py-8 text-muted-foreground">
+                          Loading participants...
                         </TableCell>
-                        <TableCell>
-                          <Badge variant="outline">{participant.teamName}</Badge>
+                      </TableRow>
+                    ) : filteredParticipants.length === 0 ? (
+                      <TableRow>
+                        <TableCell colSpan={6} className="text-center py-8 text-muted-foreground">
+                          No participants found
                         </TableCell>
-                        <TableCell>
-                          <div className="text-sm">
-                            Round {participant.progress.currentRound} 
-                            <span className="text-muted-foreground">
-                              ({participant.progress.roundsCompleted} completed)
-                            </span>
-                          </div>
-                        </TableCell>
-                        <TableCell>
-                          <Badge className={getStatusColor(participant.status)}>
-                            {participant.status}
-                          </Badge>
-                        </TableCell>
-                        <TableCell className="text-sm text-muted-foreground">
-                          {formatLastActivity(participant.progress.lastActivity)}
-                        </TableCell>
-                        <TableCell>
+                      </TableRow>
+                    ) : (
+                      filteredParticipants.map((participant) => (
+                        <TableRow key={participant.id}>
+                          <TableCell>
+                            <div>
+                              <div className="font-medium">{participant.name}</div>
+                              <div className="text-sm text-muted-foreground">{participant.email}</div>
+                            </div>
+                          </TableCell>
+                          <TableCell>
+                            <Badge variant="outline">{participant.teamName}</Badge>
+                          </TableCell>
+                          <TableCell>
+                            <div className="text-sm text-muted-foreground">
+                              No rounds yet
+                            </div>
+                          </TableCell>
+                          <TableCell>
+                            <Badge className={getStatusColor(participant.status)}>
+                              {participant.status}
+                            </Badge>
+                          </TableCell>
+                          <TableCell className="text-sm text-muted-foreground">
+                            -
+                          </TableCell>
+                          <TableCell>
                           <DropdownMenu>
                             <DropdownMenuTrigger asChild>
                               <Button variant="ghost" size="sm">
@@ -225,10 +278,11 @@ const Organizer = () => {
                                 Export Data
                               </DropdownMenuItem>
                             </DropdownMenuContent>
-                          </DropdownMenu>
-                        </TableCell>
-                      </TableRow>
-                    ))}
+                            </DropdownMenu>
+                          </TableCell>
+                        </TableRow>
+                      ))
+                    )}
                   </TableBody>
                 </Table>
               </CardContent>
@@ -270,45 +324,10 @@ const Organizer = () => {
                     <div>
                       <h4 className="font-semibold mb-3">Progress</h4>
                       <div className="space-y-2 text-sm">
-                        <div className="flex justify-between">
-                          <span className="text-muted-foreground">Current Round:</span>
-                          <span>{selectedParticipant.progress.currentRound}</span>
-                        </div>
-                        <div className="flex justify-between">
-                          <span className="text-muted-foreground">Completed:</span>
-                          <span>{selectedParticipant.progress.roundsCompleted}</span>
-                        </div>
-                        <div className="flex justify-between">
-                          <span className="text-muted-foreground">Last Activity:</span>
-                          <span>{formatLastActivity(selectedParticipant.progress.lastActivity)}</span>
-                        </div>
+                        <p className="text-muted-foreground">Progress tracking coming soon...</p>
                       </div>
                     </div>
                   </div>
-
-                  {/* Decisions Data */}
-                  {Object.keys(selectedParticipant.decisions).length > 0 && (
-                    <div>
-                      <h4 className="font-semibold mb-3">Decision History</h4>
-                      <div className="bg-muted/50 p-4 rounded-lg">
-                        <pre className="text-xs overflow-auto">
-                          {JSON.stringify(selectedParticipant.decisions, null, 2)}
-                        </pre>
-                      </div>
-                    </div>
-                  )}
-
-                  {/* Results Data */}
-                  {Object.keys(selectedParticipant.results).length > 0 && (
-                    <div>
-                      <h4 className="font-semibold mb-3">Results History</h4>
-                      <div className="bg-muted/50 p-4 rounded-lg">
-                        <pre className="text-xs overflow-auto">
-                          {JSON.stringify(selectedParticipant.results, null, 2)}
-                        </pre>
-                      </div>
-                    </div>
-                  )}
                 </CardContent>
               </Card>
             )}

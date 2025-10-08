@@ -13,16 +13,19 @@ import { LoginCredentials } from "@/types/auth";
 const Login = () => {
   const navigate = useNavigate();
   const location = useLocation();
-  const { login, isLoading } = useAuth();
+  const { login, signup, isLoading } = useAuth();
   
+  const [mode, setMode] = useState<'login' | 'signup'>('login');
   const [selectedRole, setSelectedRole] = useState<'organizer' | 'participant'>('participant');
   const [credentials, setCredentials] = useState<LoginCredentials>({
     email: '',
     password: '',
     role: 'participant'
   });
+  const [name, setName] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState('');
+  const [success, setSuccess] = useState('');
 
   const from = location.state?.from?.pathname || (selectedRole === 'organizer' ? '/organizer' : '/');
 
@@ -35,33 +38,38 @@ const Login = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
+    setSuccess('');
 
     if (!credentials.email || !credentials.password) {
       setError('Please fill in all fields');
       return;
     }
 
-    const success = await login(credentials);
-    if (success) {
-      navigate(from, { replace: true });
+    if (mode === 'signup' && !name) {
+      setError('Please enter your name');
+      return;
+    }
+
+    if (mode === 'login') {
+      const result = await login(credentials);
+      if (result.success) {
+        navigate(from, { replace: true });
+      } else {
+        setError(result.error || 'Login failed');
+      }
     } else {
-      setError('Invalid credentials. Please check your email and password.');
+      const result = await signup(credentials.email, credentials.password, name, selectedRole);
+      if (result.success) {
+        setSuccess('Account created successfully! You can now login.');
+        setMode('login');
+        setCredentials({ email: '', password: '', role: selectedRole });
+        setName('');
+      } else {
+        setError(result.error || 'Signup failed');
+      }
     }
   };
 
-  const demoCredentials = {
-    organizer: { email: 'admin@aegiscare.com', password: 'admin123' },
-    participant: { email: 'riya@student.edu', password: 'student123' }
-  };
-
-  const fillDemoCredentials = () => {
-    const demo = demoCredentials[selectedRole];
-    setCredentials(prev => ({
-      ...prev,
-      email: demo.email,
-      password: demo.password
-    }));
-  };
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-primary/10 via-background to-secondary/10 flex items-center justify-center p-4">
@@ -115,17 +123,36 @@ const Login = () => {
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               {selectedRole === 'organizer' ? <Shield className="h-5 w-5" /> : <Users className="h-5 w-5" />}
-              {selectedRole === 'organizer' ? 'Organizer Login' : 'Participant Login'}
+              {mode === 'login' 
+                ? (selectedRole === 'organizer' ? 'Organizer Login' : 'Participant Login')
+                : (selectedRole === 'organizer' ? 'Organizer Signup' : 'Participant Signup')
+              }
             </CardTitle>
             <CardDescription>
-              {selectedRole === 'organizer' 
-                ? 'Access simulation management and participant data'
-                : 'Join your team and participate in the simulation'
+              {mode === 'login'
+                ? (selectedRole === 'organizer' 
+                    ? 'Access simulation management and participant data'
+                    : 'Join your team and participate in the simulation')
+                : 'Create a new account to get started'
               }
             </CardDescription>
           </CardHeader>
           <CardContent>
             <form onSubmit={handleSubmit} className="space-y-4">
+              {mode === 'signup' && (
+                <div className="space-y-2">
+                  <Label htmlFor="name">Full Name</Label>
+                  <Input
+                    id="name"
+                    type="text"
+                    placeholder="Enter your full name"
+                    value={name}
+                    onChange={(e) => setName(e.target.value)}
+                    disabled={isLoading}
+                  />
+                </div>
+              )}
+
               <div className="space-y-2">
                 <Label htmlFor="email">Email</Label>
                 <Input
@@ -172,44 +199,35 @@ const Login = () => {
                 </Alert>
               )}
 
+              {success && (
+                <Alert>
+                  <AlertCircle className="h-4 w-4" />
+                  <AlertDescription>{success}</AlertDescription>
+                </Alert>
+              )}
+
               <Button 
                 type="submit" 
                 className="w-full" 
                 disabled={isLoading}
               >
-                {isLoading ? 'Signing in...' : 'Sign In'}
+                {isLoading ? (mode === 'login' ? 'Signing in...' : 'Creating account...') : (mode === 'login' ? 'Sign In' : 'Create Account')}
               </Button>
 
               <Button 
                 type="button" 
-                variant="outline" 
+                variant="ghost" 
                 className="w-full" 
-                onClick={fillDemoCredentials}
+                onClick={() => {
+                  setMode(mode === 'login' ? 'signup' : 'login');
+                  setError('');
+                  setSuccess('');
+                }}
                 disabled={isLoading}
               >
-                Use Demo Credentials
+                {mode === 'login' ? "Don't have an account? Sign up" : "Already have an account? Sign in"}
               </Button>
             </form>
-          </CardContent>
-        </Card>
-
-        {/* Demo Info */}
-        <Card className="border-muted">
-          <CardContent className="p-4">
-            <h4 className="font-semibold mb-2 flex items-center gap-2">
-              <AlertCircle className="h-4 w-4" />
-              Demo Accounts
-            </h4>
-            <div className="space-y-2 text-sm">
-              <div className="flex items-center justify-between">
-                <Badge variant="outline">Organizer</Badge>
-                <span className="text-muted-foreground">admin@aegiscare.com / admin123</span>
-              </div>
-              <div className="flex items-center justify-between">
-                <Badge variant="outline">Participant</Badge>
-                <span className="text-muted-foreground">riya@student.edu / student123</span>
-              </div>
-            </div>
           </CardContent>
         </Card>
       </div>
